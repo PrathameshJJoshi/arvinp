@@ -29,6 +29,39 @@ app.get('/',requireToken,(req,res)=>{
   res.send({fname:req.us.fname,lname:req.us.lname,id:req.us.id,phone:req.us.phone,type:req.us.type})
 })
 
+const multer = require("multer");
+const fs = require("fs");
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+  let dir = `uploads/`; // specify the path you want to store file
+  //check if file path exists or create the directory
+  fs.access(dir, function(error) {
+  if (error) {
+  console.log("Directory does not exist.");
+  return fs.mkdir(dir, error => cb(error, dir));
+  } else {
+  console.log("Directory exists.");
+  return cb(null, dir);
+  }
+  });
+  },
+  filename: function(req, file, cb) {
+  cb(null, Date.now() + "-" + file.originalname); // added Date.now() so that name will be unique
+  }
+  });
+  const uploadFiles = multer({ storage: storage });
+  app.post("/upload", uploadFiles.single("file"), (req, res, next) => {
+  const file = req.file;
+  if (!file) {
+  const error = new Error("Please upload a file");
+  error.httpStatusCode = 400;
+  return next(error);
+  }
+  res.json({
+  success: true,
+  statusCode: 200,
+  fileName: file.filename });
+  });
 
 // app.get('/allsites',async (req,res)=>{
 //     // const {cname} = req.body
